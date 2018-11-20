@@ -4,10 +4,7 @@ import os
 
 session = HTMLSession()
 
-lang = input("language: ") or "en"
-BASE_PATH = "https://{lang}.wikipedia.org/wiki/".format(lang=lang)
 
-m_depth = 10
 
 
 class Node:
@@ -30,18 +27,31 @@ def get_sublinks(url: str) -> list:
             BASE_PATH in link and ":" not in link[len(BASE_PATH):] and link != url]
 
 
-def generate_tree(root_node: Node) -> None or list:
-    """ # Breadth First Search
+def generate_tree(root: Node, max_depth: int=0) -> None:
+    """ # Breadth First Search (generation)
     :param root_node: node of type Node
     :return: Generates a tree structures with max_depth from root_node
     """
 
-    def _some_recursive_function(some_var: Node) -> None or Node:
-        pass
+    nodes = []
+    stack = [root]
+    depth = 0
 
-    current_depth = 0
+    links_per_article = 5
 
-    pass
+    max_depth = max_depth or links_per_article ** 3
+
+    while stack and depth < max_depth:
+        c_node = stack[0]
+        stack = stack[1:]
+
+        nodes.append(c_node)
+        for link in get_sublinks(c_node.link)[:links_per_article]:
+            n = Node(link=link, parent=c_node)
+            stack.append(n)
+            c_node.children.append(n)
+
+        depth += 1
 
 
 def visualize(node: Node, indent: int=0) -> None:
@@ -51,19 +61,26 @@ def visualize(node: Node, indent: int=0) -> None:
     :return: Visualizes a tree structures to stdout using sys.stdout.write
     """
     sys.stdout.write("[{0}] {1}: {2}\n".format(str(indent // 2), '-'*indent, node.link))
+
     indent += 2
     for child in node.children:
-        node.visualize(child, indent=indent)
-
-# TODO breadth first search
+        visualize(child, indent=indent)
 
 
 if __name__ == "__main__":
-    query = input("Root topic: ") or "Denmark"
-    url = os.path.join(BASE_PATH, query)
-    root_node = Node(link=url)
 
-    generate_tree(root_node)
-    visualize(root_node)
+    lang = "en"
+    BASE_PATH = "https://{lang}.wikipedia.org/wiki/".format(lang=lang)
+
+    query = input("""topic (e.g. "physics"): """) or "physics"
+    query.replace(' ', '_')
+
+    url = os.path.join(BASE_PATH, query)
+
+    root = Node(link=url)
+    generate_tree(root)
+
+    visualize(root)
+    sys.stdout.write("\n [n] symbolises article depth from [0] root")
 
     session.close()
