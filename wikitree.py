@@ -5,8 +5,6 @@ import os
 session = HTMLSession()
 
 
-
-
 class Node:
     """ Simple data structure for storing tree nodes """
 
@@ -29,8 +27,9 @@ def get_sublinks(url: str) -> list:
 
 def generate_tree(root: Node, max_depth: int=0) -> None:
     """ # Breadth First Search (generation)
-    :param root_node: node of type Node
-    :return: Generates a tree structures with max_depth from root_node
+    :param root: node of type Node
+    :param max_depth: Optional, set a max article depth as an integer
+    :return: Generates a tree structures with max_depth from root
     """
 
     nodes = []
