@@ -1,39 +1,45 @@
-from requests_html import HTMLSession
-import sys
+""" """
+
 import os
+import sys
+
+from typing import List, Iterator
+from requests_html import HTMLSession
+from dataclasses import dataclass, field
 
 session = HTMLSession()
 
-
+@dataclass
 class Node:
     """ Simple data structure for storing tree nodes """
 
-    def __init__(self, link: str, parent=None):
-        self.parent = parent
-        self.link = link
-        self.children = []
+    self.link: str
+    self.parent: Node = field(default=None)
+    self.children: List[Node] = field(default_factory=list)
 
 
-def get_links(_url: str) -> list:
+def get_links(url: str) -> Iterator[str]:
+    """ yield absolute links founds in the given url,
+        if the link contains BASE_PATH and is not 
+        a link to itself.
     """
-    :param _url: str(url) with base_path https://{lang}.wikipedia.org/wiki/
-    :return: list of str(links)
-    """
+
     r = session.get(_url)
 
-    return [link for link in r.html.absolute_links if  # Basic filtering
-            BASE_PATH in link and ":" not in link[len(BASE_PATH):] and link != _url]
+    for link in r.html.absolute_links:
+        if BASE_PATH in link and ":" not in link[len(BASE_PATH):] and link != url:
+            yield link
 
 
-def generate_tree(_root: Node, max_depth: int=0) -> None:
-    """ # Breadth First Search (generation)
-    :param _root: node of type Node
-    :param max_depth: Optional, set a max article depth as an integer
-    :return: Generates a tree structures with max_depth from root, if max_depth is None, return list of generated nodes.
+def generate_tree(root: Node, max_depth: int=0):
+    """ Breadth First Search algorithm
+        used to generate a node-relation
+        structure, from the links
+        found in the given absolute link.
     """
 
     nodes = []
-    stack = [_root]
+    stack = [root]
     depth = 0
 
     links_per_article = 5
@@ -56,13 +62,12 @@ def generate_tree(_root: Node, max_depth: int=0) -> None:
         depth += 1
 
 
-def visualize(_node: Node, indent: int=0) -> None:
-    """ # Recursive Depth First Search
-    :param _node: node of type Node
-    :param indent: int(x) how many dashes should be added per depth level
-    :return: Visualizes a tree structures to stdout using sys.stdout.write
+def visualize(node: Node, indent: int=0):
+    """ Recursive Depth First Search,
+        Visualizes a tree structures
+        to stdout using sys.stdout.write
     """
-    sys.stdout.write("[{0}] {1}: {2}\n".format(str(indent // 2), '-' * indent, _node.link))
+    sys.stdout.write("[{0}] {1}: {2}\n".format(str(indent // 2), '-' * indent, node.link))
 
     indent += 2
     for child in _node.children:
